@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14
+    container_name: postgres-onboard
+    environment:
+      POSTGRES_DB: employee_onboardings
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: admin123
+    ports:
+      - "5054:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  backend:
+    build: ./Backend
+    container_name: backend-onboard
+    depends_on:
+      - postgres
+    ports:
+      - "3087:3087"
+    environment:
+      - PORT=3087
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=admin123
+      - DB_NAME=employee_onboardings
+    volumes:
+      - ./Backend:/app
+
+  employee-onboard:
+    build: ./Employee-onboard
+    container_name: employee-onboard
+    ports:
+      - "9045:80"
+    depends_on:
+      - backend
+
+  hr-onboard:
+    build: ./HR-onboard
+    container_name: hr-onboard
+    ports:
+      - "9046:80"
+    depends_on:
+      - backend
+
+volumes:
+  db_data:
+
